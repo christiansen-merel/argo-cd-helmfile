@@ -403,6 +403,16 @@ case $phase in
       INTERNAL_HELM_TEMPLATE_OPTIONS="${INTERNAL_HELM_TEMPLATE_OPTIONS} ${INTERNAL_HELM_API_VERSIONS}"
     fi
 
+    # support values CMP map parameters
+    if [[ -n "${ARGOCD_APP_PARAMETERS}" ]]; then
+      INTERNAL_ARGOCD_APP_VALUES_MAP_PARAMETER=$( echo ${ARGOCD_APP_PARAMETERS} | yq '.[] | select(.name=="values") | select(.map)' )
+      if [[ -n "${INTERNAL_ARGOCD_APP_VALUES_MAP_PARAMETER}" ]]; then
+        INTERNAL_HELMFILE_TEMPLATE_OPTIONS_STATE_VALUES_FILE=$( mktemp )
+        echo ${ARGOCD_APP_PARAMETERS} | yq '.[] | select(.name=="values") | .map' -P > ${INTERNAL_HELMFILE_TEMPLATE_OPTIONS_STATE_VALUES_FILE}
+        INTERNAL_HELMFILE_TEMPLATE_OPTIONS="${INTERNAL_HELMFILE_TEMPLATE_OPTIONS} --state-values-file ${INTERNAL_HELMFILE_TEMPLATE_OPTIONS_STATE_VALUES_FILE}"
+      fi
+    fi
+
     # TODO: support post process pipeline here
     ${helmfile} \
       template \
@@ -507,6 +517,12 @@ case $phase in
     "title": "HELMFILE_USE_CONTEXT_NAMESPACE",
     "tooltip": "do not set helmfile namespace to ARGOCD_APP_NAMESPACE (for multi-namespace apps)",
     "itemType": "boolean"
+  },
+  {
+    "name": "values",
+    "title": "helmfile external values",
+    "tooltip": "used to override helmfile values",
+    "collectionType": "map"
   }
 ]
 EOF
