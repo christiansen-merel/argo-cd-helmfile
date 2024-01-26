@@ -158,6 +158,35 @@ variables declared in the application spec.
 - https://argoproj.github.io/argo-cd/user-guide/config-management-plugins/#environment
 - https://argoproj.github.io/argo-cd/user-guide/build-environment/
 
+There is also a basic support for a plugin parameter named `values`.
+It uses a map to add/override values from the helmfile. 
+It is especially usefull for ApplicationSet with templating.
+
+```yaml
+project: default
+source:
+  repoURL: 'ssh://git@git-scm.pole-emploi.intra:2222/transforminds/xp/argocd/demo.git'
+  path: .
+  targetRevision: demo
+
+  plugin:
+    parameters:
+      - name: values
+        map:
+          cluster: z6-dev
+          revision: demo
+
+destination:
+  namespace: demo
+  name: local
+syncPolicy:
+  automated:
+    prune: true
+    selfHeal: true
+  syncOptions:
+    - ServerSideApply=true
+```
+
 ## Helm Plugins
 
 To use the various helm plugins the recommended approach is the install the
